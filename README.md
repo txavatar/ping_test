@@ -1,6 +1,5 @@
-# speed_test
+# ping_test
 provide some tools to test the network.
 
 # ping
 
-# speed
