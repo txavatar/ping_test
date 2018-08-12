@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
     private int offset;
     TextView result_vi;
     Handler handler1;
-    Thread run = null;
+    Thread ping = null;
 
     @SuppressLint("HandlerLeak")
     @Override
@@ -34,21 +34,23 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        result_vi = findViewById(R.id.result_textView);
+        result_vi = (TextView) findViewById(R.id.result_textView);
         result_vi.setMovementMethod(ScrollingMovementMethod.getInstance());
         result_vi.setHorizontallyScrolling(true); // disable auto line break
         result_vi.setFocusable(true);
         result_vi.setVerticalScrollBarEnabled(true);
 
-        Button bu = findViewById(R.id.start_button);
-        bu.setOnClickListener( new View.OnClickListener() {
+        ping = new PingThread();
+
+        Button bu = (Button)findViewById(R.id.start_button);
+        bu.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("SetTextI18n")
             @Override
             public void onClick(View view) {
-                EditText te = findViewById(R.id.ip_input);
+                EditText te = (EditText)findViewById(R.id.ip_input);
                 String host = te.getText().toString();
                 if (host.isEmpty() || !isIP(host)) {
-                    Log.w(MyTag,"ip is empty, please input valid IP!");
+                    Log.w(MyTag, "ip is empty, please input valid IP!");
                     new AlertDialog.Builder(MainActivity.this)
                             .setTitle("notice")
                             .setMessage("Please input valid IP!")
@@ -58,19 +60,19 @@ public class MainActivity extends Activity {
                 }
                 Button bu = (Button) view;
                 String text = bu.getText().toString();
-                if ("START".equals(text)){
+                if ("START".equals(text)) {
                     bu.setText("STOP");
                     bu.setBackgroundColor(Color.parseColor("#930000"));
-                    run.start();
+                    ping.start();
                 } else if ("STOP".equals(text)) {
                     bu.setText("START");
                     bu.setBackgroundColor(Color.parseColor("#007500"));
 
-                    if (run.isAlive()) {
+                    if (ping.isAlive()) {
                         Log.i(MyTag, "thread is runing! stop it!");
-                        run.interrupt();
+                        ping.interrupt();
                     }
-                } else  {
+                } else {
                     Log.e(MyTag, "unknown text: " + text);
                 }
             }
@@ -84,9 +86,9 @@ public class MainActivity extends Activity {
                     case 10:
                         String resultmsg = (String) msg.obj;
                         result_vi.append(resultmsg);
-                        offset=result_vi.getLineCount()*result_vi.getLineHeight();
-                        if(offset>result_vi.getHeight()){
-                            result_vi.scrollTo(0,offset-result_vi.getHeight());
+                        offset = result_vi.getLineCount() * result_vi.getLineHeight();
+                        if (offset > result_vi.getHeight()) {
+                            result_vi.scrollTo(0, offset - result_vi.getHeight());
                         }
 //                        Log.i(MyTag, "====handlerThread====:"
 //                                + Thread.currentThread().getId());
@@ -98,63 +100,63 @@ public class MainActivity extends Activity {
                 }
             }
         };
+    }
+    class PingThread extends Thread {
+      public void run() {
+          EditText te = (EditText)findViewById(R.id.ip_input);
+          String host = te.getText().toString();
 
-        run = new Thread() {
-          public void run() {
-              EditText te = findViewById(R.id.ip_input);
-              String host = te.getText().toString();
+          Log.d(MyTag,  "host: " + host);
+          String line;
+          Process process = null;
+          BufferedReader successReader = null;
+          BufferedReader errReader;
+          String command = "ping " + " -W 1 " + host;
+          Log.d(MyTag, "cmd: " + command);
+          try {
+              process = Runtime.getRuntime().exec(command);
+              if (process == null) {
+                  Log.e(MyTag, "ping fail:process is null.");
+              }
 
-              Log.d(MyTag,  "host: " + host);
-              String line;
-              Process process = null;
-              BufferedReader successReader = null;
-              BufferedReader errReader;
-              String command = "ping " + " -W 1 " + host;
-              Log.d(MyTag, "cmd: " + command);
-              try {
-                  process = Runtime.getRuntime().exec(command);
-                  if (process == null) {
-                      Log.e(MyTag, "ping fail:process is null.");
-                  }
+              successReader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(process).getInputStream()));
+              while (!this.isInterrupted() && (line = successReader.readLine()) != null) {
+                  Log.i(MyTag, "line: " + line);
+                  sendMsgToHandle(line);
+              }
 
-                  successReader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(process).getInputStream()));
-                  while (!this.isInterrupted() && (line = successReader.readLine()) != null) {
-                      Log.i(MyTag, "line: " + line);
-                      sendMsgToHandle(line);
+              int status = process.waitFor();
+              if (status == 0) {
+                  Log.i(MyTag, "exec cmd success:" + command);
+              } else {
+                  errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                  while ((line = errReader.readLine()) != null) {
+                      Log.e(MyTag, "err: " + line);
                   }
-
-                  int status = process.waitFor();
-                  if (status == 0) {
-                      Log.i(MyTag, "exec cmd success:" + command);
-                  } else {
-                      errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                      while ((line = errReader.readLine()) != null) {
-                          Log.e(MyTag, "err: " + line);
-                      }
-                      Log.e(MyTag, command + " exec cmd fail. return " + status);
-                  }
-                  Log.i(MyTag, "exec finished.");
-              } catch (IOException e) {
-                  Log.e(MyTag, e.toString());
-              } catch (InterruptedException e) {
-                  Log.e(MyTag, "interrupt: " + e.toString());
-              } finally {
-                  Log.i(MyTag, "ping exit.");
-                  if (process != null) {
-                      process.destroy();
-                  }
-                  if (successReader != null) {
-                      try {
-                          successReader.close();
-                      } catch (IOException e) {
-                          Log.e(MyTag, e.toString());
-                      }
+                  Log.e(MyTag, command + " exec cmd fail. return " + status);
+              }
+              Log.i(MyTag, "exec finished.");
+          } catch (IOException e) {
+              Log.e(MyTag, e.toString());
+          } catch (InterruptedException e) {
+              Log.e(MyTag, "interrupt: " + e.toString());
+          } finally {
+              Log.i(MyTag, "ping exit.");
+              if (process != null) {
+                  process.destroy();
+              }
+              if (successReader != null) {
+                  try {
+                      successReader.close();
+                  } catch (IOException e) {
+                      Log.e(MyTag, e.toString());
                   }
               }
           }
-        };
+      }
+    };
 
-    }
+
     public void sendMsgToHandle(String line) {
         Message msg = handler1.obtainMessage();
         msg.what = 10;
