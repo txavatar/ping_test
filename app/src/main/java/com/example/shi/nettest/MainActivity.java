@@ -1,5 +1,80 @@
 package com.example.shi.nettest;
 
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.DisplayMetrics;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+
+import com.example.shi.nettest.fragment.FragmentPing;
+import com.example.shi.nettest.fragment.FragmentSpeed;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends FragmentActivity {
+    List<Fragment> fragList = new ArrayList<>();
+    /**
+     * Tab的那个引导线
+     */
+    private ImageView mTabLineIv;
+
+    protected void OnCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        mTabLineIv = (ImageView) this.findViewById(R.id.id_tab_line_iv);
+
+        fragList.add(new FragmentPing());
+        fragList.add(new FragmentSpeed());
+
+        ViewPager vp = (ViewPager) findViewById(R.id.viewPager);
+        vp.setCurrentItem(0);
+        vp.setAdapter(new MyPagerAdapter(getSupportFragmentManager(), fragList));
+
+        initTabLineWidth();
+    }
+
+    class MyPagerAdapter extends FragmentPagerAdapter {
+        List<Fragment> fragmentList;
+
+        public MyPagerAdapter(FragmentManager fm, List<Fragment> fragList) {
+            super(fm);
+            this.fragmentList = fragList;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return (fragmentList == null || fragmentList.size() == 0) ? null : fragmentList.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return fragmentList == null ? 0 : fragmentList.size();
+        }
+    }
+
+    /**
+     * 设置滑动条的宽度为屏幕的1/3(根据Tab的个数而定)
+     */
+    private void initTabLineWidth() {
+        DisplayMetrics dpMetrics = new DisplayMetrics();
+        getWindow().getWindowManager().getDefaultDisplay()
+                .getMetrics(dpMetrics);
+        int screenWidth = dpMetrics.widthPixels;
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) mTabLineIv
+                .getLayoutParams();
+        lp.width = screenWidth / 2;
+        mTabLineIv.setLayoutParams(lp);
+
+    }
+}
+
+/*
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -187,6 +262,4 @@ public class MainActivity extends Activity {
 
         return mat.find();
     }
-
-
-}
+}*/
