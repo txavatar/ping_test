@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,9 +35,9 @@ public class MainActivity extends FragmentActivity {
      */
     private int screenWidth;
 
-    private TextView mTabChatTv, mTabContactsTv, mTabFriendTv;
+    private TextView mTabChatTv, mTabFriendTv;
 
-    protected void OnCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -130,6 +131,18 @@ public class MainActivity extends FragmentActivity {
         }
 
         @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            //container.addd
+            return super.instantiateItem(container, position);
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            //container.removeView(fragmentList.get(position));
+            super.destroyItem(container, position, object);
+        }
+
+        @Override
         public Fragment getItem(int position) {
             return (fragmentList == null || fragmentList.size() == 0) ? null : fragmentList.get(position);
         }
@@ -160,7 +173,6 @@ public class MainActivity extends FragmentActivity {
     private void resetTextView() {
         mTabChatTv.setTextColor(Color.BLACK);
         mTabFriendTv.setTextColor(Color.BLACK);
-        mTabContactsTv.setTextColor(Color.BLACK);
     }
 
 }
