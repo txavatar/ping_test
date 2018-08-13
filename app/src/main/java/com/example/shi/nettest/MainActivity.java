@@ -51,74 +51,8 @@ public class MainActivity extends FragmentActivity {
 
         ViewPager vp = (ViewPager) findViewById(R.id.viewPager);
         vp.setCurrentItem(0);
+        vp.setOffscreenPageLimit(2);
         vp.setAdapter(new MyPagerAdapter(getSupportFragmentManager(), fragList));
-        vp.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-            /**
-             * state滑动中的状态 有三种状态（0，1，2） 1：正在滑动 2：滑动完毕 0：什么都没做。
-             */
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-
-            /**
-             * position :当前页面，及你点击滑动的页面 offset:当前页面偏移的百分比
-             * offsetPixels:当前页面偏移的像素位置
-             */
-            @Override
-            public void onPageScrolled(int position, float offset,
-                                       int offsetPixels) {
-                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) mTabLineIv
-                        .getLayoutParams();
-
-                Log.e("offset:", offset + "");
-                /**
-                 * 利用currentIndex(当前所在页面)和position(下一个页面)以及offset来
-                 * 设置mTabLineIv的左边距 滑动场景：
-                 * 记3个页面,
-                 * 从左到右分别为0,1,2
-                 * 0->1; 1->2; 2->1; 1->0
-                 */
-
-                if (currentIndex == 0 && position == 0)// 0->1
-                {
-                    lp.leftMargin = (int) (offset * (screenWidth * 1.0 / 3) + currentIndex
-                            * (screenWidth / 3));
-
-                } else if (currentIndex == 1 && position == 0) // 1->0
-                {
-                    lp.leftMargin = (int) (-(1 - offset)
-                            * (screenWidth * 1.0 / 3) + currentIndex
-                            * (screenWidth / 3));
-
-                } else if (currentIndex == 1 && position == 1) // 1->2
-                {
-                    lp.leftMargin = (int) (offset * (screenWidth * 1.0 / 3) + currentIndex
-                            * (screenWidth / 3));
-                } else if (currentIndex == 2 && position == 1) // 2->1
-                {
-                    lp.leftMargin = (int) (-(1 - offset)
-                            * (screenWidth * 1.0 / 3) + currentIndex
-                            * (screenWidth / 3));
-                }
-                mTabLineIv.setLayoutParams(lp);
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                resetTextView();
-                switch (position) {
-                    case 0:
-                        mTabChatTv.setTextColor(Color.BLUE);
-                        break;
-                    case 1:
-                        mTabFriendTv.setTextColor(Color.BLUE);
-                        break;
-                }
-                currentIndex = position;
-            }
-        });
         initTabLineWidth();
     }
 
